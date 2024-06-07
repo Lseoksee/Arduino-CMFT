@@ -1,32 +1,43 @@
-#include <Adafruit_OV7670.h>
-#include <SPIBrute.h>
-#include <image_ops.h>
-#include <ov7670.h>
-
 #include <Servo.h>
+#include <math.h>
+#define TRIG A1
+#define ECHO A2
 
 Servo servo;
 
-// OV7670_arch arch = {.timer = TCC1, .xclk_pdec = false};
-// OV7670_pins pins = {.enable = PIN_PCC_D8, .reset = PIN_PCC_D9,
-//                     .xclk = PIN_PCC_XCLK};
-// Adafruit_OV7670 cam(OV7670_ADDR, &pins, &Wire1, &arch);
+int scanList[180] = { NULL };
 
 void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  Serial.begin(9600);
   servo.attach(A0);
+  servo.write(0);
 }
 
 int angle = 0;
 void loop() {
-  while (angle <= 180) {
+  while (angle < 180) {
     // servo.write(angle);
     angle++;
-    delay(10);
+
+    digitalWrite(TRIG, LOW);
+    delayMicroseconds(2);
+    // digitalWrite(TRIG, HIGH);
+    long duration = pulseIn(ECHO, HIGH);
+    scanList[angle - 1] = duration;
   }
 
-  while (angle >= 0) {
-    // servo.write(angle);
+  while (angle > 0) {
     angle--;
-    delay(10);
+    // servo.write(angle);
+
+    digitalWrite(TRIG, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG, HIGH);
+    long duration = pulseIn(ECHO, HIGH);
+    // 5, 10
+
+    scanList[angle] = duration;
   }
 }
