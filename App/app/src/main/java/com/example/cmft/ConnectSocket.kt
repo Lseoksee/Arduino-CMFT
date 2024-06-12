@@ -15,7 +15,7 @@ class ConnectSocket(private val addr: String, private val port: Int) {
         Thread {
             val serverAddr = InetAddress.getByName(addr)
             val socket = DatagramSocket()
-            var buffer = ByteArray(512)
+            var buffer = ByteArray(1024)
 
             val messageByte = CONNECT_MEG.toByteArray()
 
@@ -30,7 +30,7 @@ class ConnectSocket(private val addr: String, private val port: Int) {
             while (true) {
                 val packet = DatagramPacket(buffer, buffer.size, serverAddr, port)
                 socket.receive(packet)
-                callBack.recv(packet.data)
+                callBack.recvVideo(packet)
                 buffer = ByteArray(512)
             }
 

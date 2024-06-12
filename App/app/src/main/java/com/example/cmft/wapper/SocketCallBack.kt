@@ -1,5 +1,13 @@
 package com.example.cmft.wapper
 
-interface SocketCallBack {
-    fun recv(data: ByteArray)
+import java.net.DatagramPacket
+
+open class SocketCallBack {
+    open fun recvNotification(data: DatagramPacket) {
+
+    }
+
+    open fun recvVideo(data: DatagramPacket) {
+
+    }
 }

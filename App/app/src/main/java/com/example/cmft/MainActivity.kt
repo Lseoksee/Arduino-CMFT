@@ -1,5 +1,6 @@
 package com.example.cmft
 
+import com.example.cmft.wapper.SocketCallBack
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -17,8 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.cmft.databinding.ActivityMainBinding
-import com.example.cmft.wapper.SocketCallBack
-import java.nio.ByteBuffer
+import java.net.DatagramPacket
 import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
@@ -54,14 +54,12 @@ class MainActivity : AppCompatActivity() {
     // 실제 앱 실행 함수
     private fun appStart() {
         val socket = ConnectSocket(SERVER_IP, SERVER_PORT)
-        val holder = binding!!.mainVideo.holder
-        val streamingVideo = StreamingVideo(holder)
+        val streamingVideo = StreamingVideo(binding!!.mainVideo)
 
-        socket.recvMessege(object: SocketCallBack {
-            override fun recv(data: ByteArray) {
-                val byteBuffer = ByteBuffer.wrap(data, 0, data.size)
-                streamingVideo.refreshFrame(byteBuffer)
-                Log.d("로그", String(data, 0, data.size, Charset.forName("utf-8")))
+        socket.recvMessege(object: SocketCallBack() {
+            override fun recvVideo(data: DatagramPacket) {
+                val byteData = data.data
+                Log.d("로그", String(byteData, 0, data.length, Charset.forName("utf-8")))
             }
         })
 

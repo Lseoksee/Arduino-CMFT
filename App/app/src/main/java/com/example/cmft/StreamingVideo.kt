@@ -1,18 +1,14 @@
 package com.example.cmft
 
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.view.SurfaceHolder
-import java.nio.ByteBuffer
+import android.widget.ImageView
+import java.io.InputStream
 
 
-class StreamingVideo(private val holder: SurfaceHolder)  {
+class StreamingVideo(private val view: ImageView)  {
 
-    fun refreshFrame(byteBuffer: ByteBuffer) {
-        val bitmap = BitmapFactory.decodeByteArray(byteBuffer.array(), 0, byteBuffer.limit())
-        val canvas: Canvas = holder.lockCanvas()
-        canvas.drawBitmap(bitmap, 0f, 0f, Paint())
-        holder.unlockCanvasAndPost(canvas)
+    fun refreshFrame(inputStream: InputStream) {
+        val bitmap = BitmapFactory.decodeStream(inputStream);
+        view.setImageBitmap(bitmap)
     }
 }
