@@ -1,2 +1,0 @@
-- WIFI: esp8266 
-- Cam: ov7670
