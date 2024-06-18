@@ -1,6 +1,5 @@
 package com.example.cmft
 
-import com.example.cmft.wapper.SocketCallBack
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -18,15 +17,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.cmft.databinding.ActivityMainBinding
-import java.net.DatagramPacket
-import java.nio.charset.Charset
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        const val SERVER_IP = "192.168.0.40"
-        const val SERVER_PORT = 9000
-    }
-
     private val channelld = "cmft"
     private val PERMISSIONS_REQUEST = 1 // 권한 요청 레벨
     private var binding: ActivityMainBinding? = null
@@ -53,20 +50,66 @@ class MainActivity : AppCompatActivity() {
 
     // 실제 앱 실행 함수
     private fun appStart() {
-        val socket = ConnectSocket(SERVER_IP, SERVER_PORT)
-        val streamingVideo = StreamingVideo(binding!!.mainVideo)
+        val client = OkHttpClient()
 
-        socket.recvMessege(object: SocketCallBack() {
-            override fun recvVideo(data: DatagramPacket) {
-                val byteData = data.data
-                Log.d("로그", String(byteData, 0, data.length, Charset.forName("utf-8")))
+        val request = Request.Builder().url("ws://192.168.4.1:80").build()
+        val listener = object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d("소켓", "연결완료")
+                super.onOpen(webSocket, response)
+                runOnUiThread {
+                    Toast.makeText(applicationContext, "연결완료", Toast.LENGTH_SHORT).show()
+                }
             }
-        })
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d("소켓", "메시지: $text")
+                showNotification(R.string.app_name.toString(), "침입을 감지했습니다!")
+                super.onMessage(webSocket, text)
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d("소켓", "연결종료")
+                super.onClosing(webSocket, code, reason)
+                runOnUiThread {
+                    Toast.makeText(applicationContext, "연결 종료", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.d("소켓", t.message!!)
+                super.onFailure(webSocket, t, response)
+                runOnUiThread {
+                    Toast.makeText(applicationContext, "연결 실패: $t", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        var webSocket: WebSocket? = null
+
+        binding!!.button.setOnClickListener {
+            try {
+                webSocket = client.newWebSocket(request, listener)
+                client.dispatcher.executorService.shutdown()
+            } catch (_: Exception) {
+
+            }
+        }
+
+        binding!!.settingbt.setOnClickListener {
+            try {
+                if (webSocket == null) {
+                    Toast.makeText(applicationContext, "먼저 서버연결을 실행해 주세요.", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    webSocket!!.send("1")
+                }
+            } catch (_: Exception) {
+
+            }
+        }
 
         createNotificationChannel()
-        binding!!.button.setOnClickListener {
-            showNotification("하", "이")
-        }
     }
 
     private fun createNotificationChannel() {
